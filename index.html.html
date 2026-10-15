@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rompecabezas Proplas - América Central</title>
+
+    <!-- Etiquetas Open Graph para vista previa al compartir en WhatsApp y redes sociales -->
+    <meta property="og:title" content="¡Desafío Rompecabezas Proplas!">
+    <meta property="og:description" content="Pon a prueba tus habilidades y completa el reto interactivo de Proplas América Central.">
+    <meta property="og:image" content="https://abrahambravo075-bit.github.io/rompecabezas-proplas/mi-imagen.jpg">
+    <meta property="og:url" content="https://abrahambravo075-bit.github.io/rompecabezas-proplas/">
+    <meta property="og:type" content="website">
+
+    <style>
+        :root {
+            --brand-blue: #0b2545;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --accent-blue: #134074;
+            --border-color: #cbd5e1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--brand-blue);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .brand-header {
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            text-align: center;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .brand-header h1 {
+            color: var(--accent-blue);
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .brand-header span {
+            font-size: 0.6rem;
+            color: #64748b;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .game-title {
+            color: white;
+            font-size: 1.05rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .card-container {
+            background-color: var(--card-bg);
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .lives {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+        }
+
+        .stats-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-hint {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-hint:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .counter-text {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        .game-grid-split {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            min-height: 280px;
+        }
+
+        .left-drop-zone {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            background-color: #f1f5f9;
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 4px;
+            height: 280px;
+        }
+
+        .drop-slot {
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background-size: 200px 280px;
+        }
+
+        .drop-slot.filled {
+            border: none;
+        }
+
+        .right-pieces-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 3px;
+            background-color: var(--accent-blue);
+            padding: 4px;
+            border-radius: 10px;
+            height: 280px;
+            overflow-y: auto;
+        }
+
+        .puzzle-piece {
+            background-size: 200px 280px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
+
+        .puzzle-piece.selected {
+            border: 2px solid #f59e0b;
+            transform: scale(0.95);
+        }
+
+        .hint-alert {
+            margin-top: 12px;
+            padding: 8px 12px;
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            color: #b45309;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+
+        /* Ventana emergente (Modal de Resultados) */
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+            padding: 16px;
+        }
+
+        .result-content {
+            background: white;
+            padding: 28px 20px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 340px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            animation: modalPop 0.3s ease-out;
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .result-content h2 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .result-content p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .btn-modal-action {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 10px rgba(11, 37, 69, 0.3);
+        }
+
+        /* Modal de Bienvenida General */
+        .welcome-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 16px;
+        }
+
+        .welcome-content {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 320px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .welcome-content h2 {
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            font-size: 1.15rem;
+        }
+
+        .welcome-content p {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .btn-start {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* Confeti animado */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            z-index: 99;
+            animation: fall 3s linear forwards;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ventana de Bienvenida General -->
+    <div class="welcome-modal" id="modalBienvenida">
+        <div class="welcome-content">
+            <h2>¡Bienvenido a Proplas!</h2>
+            <p>Toca una pieza de la derecha y colócala en su casilla correcta de la izquierda. ¡Mucho éxito!</p>
+            <button class="btn-start" onclick="cerrarBienvenida()">Comenzar Reto</button>
+        </div>
+    </div>
+
+    <!-- Ventana Emergente (Modal de Resultados: Victoria o Derrota) -->
+    <div class="result-modal" id="modalResultado">
+        <div class="result-content" id="contenidoModalResultado">
+            <!-- Contenido dinámico inyectado por JS -->
+        </div>
+    </div>
+
+    <!-- Contenedor para confeti -->
+    <div id="confettiContainer"></div>
+
+    <div class="main-wrapper">
+        <div class="brand-header">
+            <h1>PROPLAS</h1>
+            <span>AMERICA CENTRAL</span>
+        </div>
+        
+        <div class="game-title">Rompecabezas Proplas</div>
+
+        <div class="card-container">
+            <div class="status-bar">
+                <div class="lives" id="vidasContainer">❤️❤️❤️</div>
+                <div class="stats-right">
+                    <button class="btn-hint" id="btnPista" onclick="usarPista()">💡 Pista (1)</button>
+                    <span class="counter-text" id="contadorPiezas">Colocadas: 0/12</span>
+                </div>
+            </div>
+
+            <!-- Zona de juego -->
+            <div class="game-grid-split">
+                <div class="left-drop-zone" id="zonaArmado"></div>
+                <div class="right-pieces-box" id="zonaPiezas"></div>
+            </div>
+
+            <div class="hint-alert" id="cajaPistaTexto" style="margin-top: 12px;">
+                <strong>Pista:</strong> Relaciona los colores y la textura de la imagen para ubicar cada pieza correctamente.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cerrarBienvenida() {
+            document.getElementById('modalBienvenida').style.display = 'none';
+        }
+
+        let pistaDisponible = true;
+        function usarPista() {
+            if (pistaDisponible) {
+                document.getElementById('cajaPistaTexto').style.display = 'block';
+                const btn = document.getElementById('btnPista');
+                btn.innerText = 'Pista Usada';
+                btn.disabled = true;
+                pistaDisponible = false;
+            }
+        }
+
+        // Enlace absoluto directo a la imagen en GitHub Pages para evitar errores de ruta
+        const urlImagen = 'https://abrahambravo075-bit.github.io/rompecabezas-proplas/mi-imagen.jpg';
+        const totalPiezas = 12;
+        const cols = 3;
+        const rows = 4;
+        
+        let vidas = 3;
+        let piezasColocadas = 0;
+        let piezaSeleccionada = null;
+        let juegoTerminado = false;
+
+        const zonaArmado = document.getElementById('zonaArmado');
+        const zonaPiezas = document.getElementById('zonaPiezas');
+        const modalResultado = document.getElementById('modalResultado');
+        const contenidoModal = document.getElementById('contenidoModalResultado');
+
+        function iniciarJuego() {
+            zonaArmado.innerHTML = '';
+            zonaPiezas.innerHTML = '';
+            document.getElementById('confettiContainer').innerHTML = '';
+            modalResultado.style.display = 'none';
+            vidas = 3;
+            piezasColocadas = 0;
+            juegoTerminado = false;
+            piezaSeleccionada = null;
+            
+            document.getElementById('contadorPiezas').innerText = 'Colocadas: 0/12';
+            document.getElementById('btnPista').disabled = false;
+            actualizarVidas();
+
+            // Crear casillas vacías
+            for (let i = 0; i < totalPiezas; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'drop-slot';
+                slot.dataset.index = i;
+                slot.onclick = () => colocarPiezaEnSlot(i, slot);
+                zonaArmado.appendChild(slot);
+            }
+
+            // Crear piezas desordenadas
+            let indicesOriginales = Array.from({ length: totalPiezas }, (_, i) => i);
+            indicesOriginales.sort(() => Math.random() - 0.5);
+
+            indicesOriginales.forEach(idOriginal => {
+                const pieza = document.createElement('div');
+                pieza.className = 'puzzle-piece';
+                pieza.dataset.id = idOriginal;
+                pieza.style.backgroundImage = `url('${urlImagen}')`;
+                
+                const r = Math.floor(idOriginal / cols);
+                const c = idOriginal % cols;
+                pieza.style.backgroundPosition = `${(c / (cols - 1)) * 100}% ${(r / (rows - 1)) * 100}%`;
+
+                pieza.onclick = () => seleccionarPiezaParaMover(pieza);
+                zonaPiezas.appendChild(pieza);
+            });
+        }
+
+        function seleccionarPiezaParaMover(piezaEl) {
+            if (juegoTerminado) return;
+            if (piezaEl.parentElement === zonaArmado) return;
+
+            if (piezaSeleccionada) {
+                piezaSeleccionada.classList.remove('selected');
+            }
+            piezaSeleccionada = piezaEl;
+            piezaSeleccionada.classList.add('selected');
+        }
+
+        function colocarPiezaEnSlot(slotIndex, slotEl) {
+            if (juegoTerminado || !piezaSeleccionada) return;
+            if (slotEl.classList.contains('filled')) return;
+
+            const idPieza = parseInt(piezaSeleccionada.dataset.id);
+
+            if (idPieza === slotIndex) {
+                // ACIERTO
+                slotEl.style.backgroundImage = `url('${urlImagen}')`;
+                const r = Math.floor(slotIndex / cols);
+                const c = slotIndex % cols;
+                slotEl.style.backgroundPosition = `${(c / (cols - 1)) * 100}% ${(r / (rows - 1)) * 100}%`;
+                slotEl.classList.add('filled');
+
+                piezaSeleccionada.remove();
+                piezaSeleccionada = null;
+                piezasColocadas++;
+
+                document.getElementById('contadorPiezas').innerText = `Colocadas: ${piezasColocadas}/12`;
+
+                // VICTORIA
+                if (piezasColocadas === totalPiezas) {
+                    juegoTerminado = true;
+                    mostrarModalVictoria();
+                    lanzarConfeti();
+                }
+            } else {
+                // ERROR
+                vidas--;
+                actualizarVidas();
+                piezaSeleccionada.classList.remove('selected');
+                piezaSeleccionada = null;
+
+                // DERROTA
+                if (vidas <= 0) {
+                    juegoTerminado = true;
+                    mostrarModalDerrota();
+                }
+            }
+        }
+
+        function actualizarVidas() {
+            let corazones = '';
+            for (let i = 0; i < 3; i++) {
+                corazones += i < vidas ? '❤️' : '🖤';
+            }
+            document.getElementById('vidasContainer').innerText = corazones;
+        }
+
+        function mostrarModalVictoria() {
+            contenidoModal.innerHTML = `
+                <div class="result-icon">🎉</div>
+                <h2 style="color: #065f46;">¡Felicidades, has ganado!</h2>
+                <p>Completaste el rompecabezas con éxito.</p>
+                <button class="btn-modal-action" onclick="iniciarJuego()">Jugar de nuevo</button>
+            `;
+            modalResultado.style.display = 'flex';
+        }
+
+        function mostrarModalDerrota() {
+            contenidoModal.innerHTML = `
+                <div class="result-icon">😢💔</div>
+                <h2 style="color: #991b1b;">Has perdido</h2>
+                <p>Te has quedado sin vidas. Vuelve a intentarlo.</p>
+                <button class="btn-modal-action" onclick="iniciarJuego()">Volver a intentar</button>
+            `;
+            modalResultado.style.display = 'flex';
+        }
+
+        function lanzarConfeti() {
+            const container = document.getElementById('confettiContainer');
+            const colores = ['#f59e0b', '#10b981', '#3b82f6', '#ef4444', '#8b5cf6'];
+            
+            for (let i = 0; i < 70; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
+                confetti.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+                confetti.style.animationDelay = (Math.random() * 0.3) + 's';
+                container.appendChild(confetti);
+            }
+        }
+
+        window.onload = iniciarJuego;
+    </script>
+</body>
+</html>
